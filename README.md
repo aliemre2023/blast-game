@@ -10,6 +10,7 @@ This is a simple puzzle game where players blast adjacent same-colored blocks to
    - Click the "X" button and refresh the game and go back to the main screen.
 3) If the player destroys all obstacles before the move count reaches zero, they win, and a victory screen appears. If the move count reaches zero while obstacles are still present, a defeat screen appears.
 4) If a level is passed successfully, the next level becomes playable.
+5) If all levels are finished, game restarts from "Level 1" (mod10).
   
 Example screenshots given below respectively: <br>
 <img height="250" alt="main1" src="https://github.com/user-attachments/assets/73124a95-332a-404d-a309-ee3e15d260a7" />

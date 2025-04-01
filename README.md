@@ -6,7 +6,8 @@ This is a simple puzzle game where players blast adjacent same-colored blocks to
 2) When the "Level 1" button is clicked, the game screen opens. Player can:
    - Click a block (blue, green, red, yellow) to blast adjacent blocks of the same color. If those blocks are adjacent to an obstacle (box, stone, vase), the obstacle's health decreases by one.
    - Click a rocket state block (when more than 3 adjacent blocks of the same color are grouped together) to generate a rocket at the clicked point, causing other blocks to be destroyed.
-     -  If two rockets are adjacent, a 3x3 destruction effect is activated, and those blocks are destroyed. 
+   - Click a rocket block to destroy a row and a column.
+     -  If two rockets are adjacent, a 3row X 3col destruction is activated, and those blocks are destroyed. 
    - Click the "X" button and refresh the game and go back to the main screen.
 3) If the player destroys all obstacles before the move count reaches zero, they win, and a victory screen appears. If the move count reaches zero while obstacles are still present, a defeat screen appears.
 4) If a level is passed successfully, the next level becomes playable.

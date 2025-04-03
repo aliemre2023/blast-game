@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
+using System.Collections;
 
 public class GameInitalizer : MonoBehaviour
 {
@@ -27,6 +28,8 @@ public class GameInitalizer : MonoBehaviour
     public Canvas goal_vase;
 
     private List<List<string>> grid2d= new List<List<string>>();
+
+    public RectTransform broken_block;
 
 
 
@@ -78,14 +81,27 @@ public class GameInitalizer : MonoBehaviour
 
     public void BlockHandler(LevelData levelData, List<List<string>> grid2d)
     {
-        GameGridHandler gameGridHandler = new GameGridHandler();
+        //GameGridHandler gameGridHandler = new GameGridHandler();
+        GameGridHandler gameGridHandler = FindObjectOfType<GameGridHandler>();
+
+        if (gameGridHandler == null)
+        {
+            Debug.LogError("GameGridHandler is missing in the scene!");
+            return;
+        }
+
+
         // Create a new tempParent
+        if (tempParent == null)
+        {
+            tempParent = new GameObject("TempParent");
+        }
         if (tempParent != null)
         {
             Destroy(tempParent); // Destroy the entire tempParent GameObject
             tempParent = null;   
         }
-        gameGridHandler.PositionBlocks(levelData, grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, moveCountText, rocket, goal_box, goal_stone, goal_vase);
+        gameGridHandler.PositionBlocks(levelData, grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, moveCountText, rocket, goal_box, goal_stone, goal_vase, broken_block, cube_particles, obstacle_particles, rocket_particles);
     }
 
     void SetGoalsInitial(List<int> goals, List<List<string>> grid2d){

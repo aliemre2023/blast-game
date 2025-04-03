@@ -3,9 +3,11 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
 using System.Linq;
+using System.Collections;
 
 public class GameGridHandler : MonoBehaviour
 {
+
     void IsGameFinish(bool any_obstacle, string any_move)
     {
         GameFinishHandler gameFinishHandler = FindObjectOfType<GameFinishHandler>();
@@ -148,7 +150,8 @@ public class GameGridHandler : MonoBehaviour
         List<RectTransform> cubes, List<RectTransform> cube_rocket_state, 
         List<RectTransform> obstacles, GameObject tempParent, List<int> goals, 
         TextMeshProUGUI moveCountText, List<RectTransform> rocket,
-        Canvas goal_box, Canvas goal_stone, Canvas goal_vase)
+        Canvas goal_box, Canvas goal_stone, Canvas goal_vase, RectTransform broken_block,
+        List<RectTransform> cube_particles, List<RectTransform> obstacle_particles, List<RectTransform> rocket_particles)
     {
         DearrangeRocketBlock(grid2d);
         ArrangeRocketBlocks(grid2d);
@@ -195,6 +198,7 @@ public class GameGridHandler : MonoBehaviour
 
                 RectTransform block = null;
 
+
                 // Assign block based on the grid value
                 if (grid2d[i][j].ToString() == "rand")
                 {
@@ -204,6 +208,55 @@ public class GameGridHandler : MonoBehaviour
                     else if(random_cube_idx == 1) grid2d[i][j] = "g";
                     else if(random_cube_idx == 2) grid2d[i][j] = "r";
                     else if(random_cube_idx == 3) grid2d[i][j] = "y";
+                }
+                else if (grid2d[i][j].ToString().EndsWith("_broken"))
+                {
+                    Debug.Log("====****---Im in _broken---****====");
+
+                    RectTransform particle = null;
+
+                    if (grid2d[i][j].ToString() == "bo_broken") particle = obstacle_particles[0];
+                    else if (grid2d[i][j].ToString() == "s_broken") particle = obstacle_particles[1];
+                    else if (grid2d[i][j].ToString() == "v2_broken") particle = obstacle_particles[2];
+                    else if (grid2d[i][j].ToString() == "rocket_v_broken" || grid2d[i][j].ToString() == "rocket_h_broken") particle = rocket_particles[0];
+                    else if (grid2d[i][j].ToString() == "b_broken" ||grid2d[i][j].ToString() == "b_rocket_broken") particle = cube_particles[0];
+                    else if (grid2d[i][j].ToString() == "g_broken" ||grid2d[i][j].ToString() == "g_rocket_broken") particle = cube_particles[1];
+                    else if (grid2d[i][j].ToString() == "r_broken" ||grid2d[i][j].ToString() == "r_rocket_broken") particle = cube_particles[2];
+                    else if (grid2d[i][j].ToString() == "y_broken" ||grid2d[i][j].ToString() == "y_rocket_broken") particle = cube_particles[3];
+                    else particle = cube_particles[0];
+
+                    /*
+                    find the Rectransform broken_schema, make all the child images source to the particle 
+                    */
+                    Image particleImage = particle.GetComponent<Image>();
+                    if (particleImage == null)
+                    {
+                        Debug.LogError("Particle does not have an Image component!");
+                    }
+                    else
+                    {
+                        Debug.Log($"Particle Image found. Sprite: {particleImage.sprite.name}, Color: {particleImage.color}");
+                    }
+
+                    foreach (Transform child in broken_block)
+                    {
+                        Image childImage = child.GetComponent<Image>();
+                        if (childImage != null)
+                        {
+                            Debug.Log($"Updating child: {child.name} with particle sprite: {particleImage.sprite.name}");
+                            childImage.sprite = particleImage.sprite;
+                            childImage.color = particleImage.color;
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"Child: {child.name} does not have an Image component!");
+                        }
+                    }
+
+
+                    RectTransform copy_block = Instantiate(broken_block, tempParent.transform);
+                    copy_block.anchoredPosition = new Vector2(minX + x, minY + y);
+                    copy_block.name = $"{i},{j}";
                 }
                 else if (grid2d[i][j].ToString() == "b") block = cubes[0];
                 else if (grid2d[i][j].ToString() == "b_rocket") block = cube_rocket_state[0];
@@ -222,7 +275,7 @@ public class GameGridHandler : MonoBehaviour
 
 
                 // Only instantiate if a valid block is assigned
-                if (block != null)
+                if (block != null && !grid2d[i][j].ToString().EndsWith("_broken"))
                 {
                     RectTransform copy_block = Instantiate(block, tempParent.transform);
                     copy_block.anchoredPosition = new Vector2(minX + x, minY + y);
@@ -234,7 +287,8 @@ public class GameGridHandler : MonoBehaviour
                     {
                         instantiatedButton.onClick.AddListener(() => OnButtonClicked(
                             copy_block.name, levelData, grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, 
-                            moveCountText, rocket, goal_box, goal_stone, goal_vase
+                            moveCountText, rocket, goal_box, goal_stone, goal_vase, broken_block,
+                            cube_particles, obstacle_particles, rocket_particles
                         ));
                     }
                     else
@@ -251,7 +305,8 @@ public class GameGridHandler : MonoBehaviour
         List<RectTransform> cubes, List<RectTransform> cube_rocket_state, 
         List<RectTransform> obstacles, GameObject tempParent, List<int> goals, 
         TextMeshProUGUI moveCountText, List<RectTransform> rocket,
-        Canvas goal_box, Canvas goal_stone, Canvas goal_vase)
+        Canvas goal_box, Canvas goal_stone, Canvas goal_vase, RectTransform broken_block,
+        List<RectTransform> cube_particles, List<RectTransform> obstacle_particles, List<RectTransform> rocket_particles)
     {
         //Debug.Log($"Button clicked! İndex: ({buttonName})");
 
@@ -282,7 +337,7 @@ public class GameGridHandler : MonoBehaviour
         int x_int = int.Parse(x);
         int y_int = int.Parse(y);
 
-        BreakingBlocks(x_int, y_int, levelData, grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, moveCountText, rocket, goal_box, goal_stone, goal_vase);
+        BreakingBlocks(x_int, y_int, levelData, grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, moveCountText, rocket, goal_box, goal_stone, goal_vase, broken_block, cube_particles, obstacle_particles, rocket_particles);
     }
 
     void BreakingBlocks(int x, int y, 
@@ -290,9 +345,13 @@ public class GameGridHandler : MonoBehaviour
         List<RectTransform> cubes, List<RectTransform> cube_rocket_state, 
         List<RectTransform> obstacles, GameObject tempParent, List<int> goals, 
         TextMeshProUGUI moveCountText, List<RectTransform> rocket,
-        Canvas goal_box, Canvas goal_stone, Canvas goal_vase)
+        Canvas goal_box, Canvas goal_stone, Canvas goal_vase, RectTransform broken_block,
+        List<RectTransform> cube_particles, List<RectTransform> obstacle_particles, List<RectTransform> rocket_particles)
     {
         //Debug.Log("----BREAKING BLOCK DEBUG----");
+
+        // copy
+        List<List<string>> broken_grid2d = grid2d.Select(row => row.ToList()).ToList();
 
         int[] dx = { 0, 0, 1, -1 };
         int[] dy = { 1, -1, 0, 0 };
@@ -320,6 +379,7 @@ public class GameGridHandler : MonoBehaviour
                                 }
                                 else{
                                     int temp_x = x+1;
+                                    broken_grid2d[temp_x][t] = grid2d[temp_x][t] + "_broken";
                                     for(int _x = temp_x+1; _x < rows; _x++){
                                         grid2d[temp_x][t] = grid2d[_x][t];
                                         temp_x = _x; 
@@ -334,6 +394,7 @@ public class GameGridHandler : MonoBehaviour
                             }
                             else{
                                 int temp_x = x;
+                                broken_grid2d[temp_x][t] = grid2d[temp_x][t] + "_broken";
                                 for(int _x = temp_x+1; _x < rows; _x++){
                                     grid2d[temp_x][t] = grid2d[_x][t];
                                     temp_x = _x; 
@@ -348,6 +409,7 @@ public class GameGridHandler : MonoBehaviour
                                 }
                                 else{
                                     int temp_x = x-1;
+                                    broken_grid2d[temp_x][t] = grid2d[temp_x][t] + "_broken";
                                     for(int _x = temp_x+1; _x < rows; _x++){
                                         grid2d[temp_x][t] = grid2d[_x][t];
                                         temp_x = _x; 
@@ -364,6 +426,7 @@ public class GameGridHandler : MonoBehaviour
                                     grid2d[t][y+1] = "v2";
                                 }
                                 else{
+                                    broken_grid2d[t][y+1] = grid2d[t][y+1] + "_broken";
                                     grid2d[t][y+1] = "rand";
                                 }
                             }
@@ -373,6 +436,7 @@ public class GameGridHandler : MonoBehaviour
                                 grid2d[t][y] = "v2";
                             }
                             else{
+                                broken_grid2d[t][y] = grid2d[t][y] + "_broken";
                                 grid2d[t][y] = "rand";
                             }
                         }
@@ -382,6 +446,7 @@ public class GameGridHandler : MonoBehaviour
                                     grid2d[t][y-1] = "v2";
                                 }
                                 else{
+                                    broken_grid2d[t][y-1] = grid2d[t][y-1] + "_broken";
                                     grid2d[t][y-1] = "rand";
                                 }
                             }
@@ -397,6 +462,7 @@ public class GameGridHandler : MonoBehaviour
                     }
                     else{
                         int temp_x = x;
+                        broken_grid2d[temp_x][t] = grid2d[temp_x][t] + "_broken";
                         for(int _x = temp_x+1; _x < rows; _x++){
                             grid2d[temp_x][t] = grid2d[_x][t];
                             temp_x = _x; 
@@ -414,6 +480,7 @@ public class GameGridHandler : MonoBehaviour
                         grid2d[t][y] = "v2";
                     }
                     else{
+                        broken_grid2d[t][y] = grid2d[t][y] + "_broken";
                         grid2d[t][y] = "rand";
                     }
                 }
@@ -458,13 +525,20 @@ public class GameGridHandler : MonoBehaviour
 
             System.Random random = new System.Random();
             int randomNumber = random.Next(0, 2);
-            if(randomNumber == 0) grid2d[x][y] = "rocket_h";
-            else grid2d[x][y] = "rocket_v";
+            if(randomNumber == 0) {
+                grid2d[x][y] = "rocket_h";
+                broken_grid2d[x][y] = "rocket_h";
+            }
+            else {
+                grid2d[x][y] = "rocket_v";
+                broken_grid2d[x][y] = "rocket_v";
+            }
 
             cluster.Sort((a, b) => b.Item1.CompareTo(a.Item1));
             for(int i = 0; i < cluster.Count; i++){
                 var (_x, _y) = cluster[i];
                 if(_x == x && _y == y) continue;
+                broken_grid2d[_x][_y] = grid2d[_x][_y] + "_broken";
 
                 Debug.Log($"({_x}, {_y})");
                 
@@ -486,6 +560,8 @@ public class GameGridHandler : MonoBehaviour
                     if(nx < rows && 0 <= nx && ny < cols && 0 <= ny){
                         if(grid2d[nx][ny] == "bo" || grid2d[nx][ny] == "s" || grid2d[nx][ny] == "v" || grid2d[nx][ny] == "v2"){
                             if(grid2d[nx][ny] == "bo" || grid2d[nx][ny] == "s" || grid2d[nx][ny] == "v2"){
+                                broken_grid2d[nx][ny] = grid2d[nx][ny] + "_broken";
+
                                 for(int __x = nx; __x < rows; __x++){
                                     grid2d[nx][ny] = grid2d[__x][ny];
                                     nx = __x; 
@@ -546,6 +622,8 @@ public class GameGridHandler : MonoBehaviour
                     if(nx < rows && 0 <= nx && ny < cols && 0 <= ny){
                         if(grid2d[nx][ny] == "bo" || grid2d[nx][ny] == "s" || grid2d[nx][ny] == "v" || grid2d[nx][ny] == "v2"){
                             if(grid2d[nx][ny] == "bo" || grid2d[nx][ny] == "s" || grid2d[nx][ny] == "v2"){
+                                broken_grid2d[nx][ny] = grid2d[nx][ny] + "_broken";
+
                                 for(int __x = nx; __x < rows; __x++){
                                     grid2d[nx][ny] = grid2d[__x][ny];
                                     nx = __x; 
@@ -564,6 +642,8 @@ public class GameGridHandler : MonoBehaviour
             for(int i = 0; i < cluster.Count; i++){
                 var (_x, _y) = cluster[i];
 
+                broken_grid2d[_x][_y] = grid2d[_x][_y] + "_broken";
+
                 Debug.Log($"({_x}, {_y})");
                 
                 for(int __x = _x; __x < rows; __x++){
@@ -577,11 +657,31 @@ public class GameGridHandler : MonoBehaviour
 
         }
 
-        PositionBlocks(levelData, grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, moveCountText, rocket, goal_box, goal_stone, goal_vase);
-        bool any_obstacle = ArrangeGoals(grid2d, goal_box, goal_stone, goal_vase);
-        IsGameFinish(any_obstacle, moveCountText.text);
 
-        GameInitalizer gameInit = FindObjectOfType<GameInitalizer>();
+        Debug.Log("Printing broken_grid2d:");
+        for (int i = 0; i < broken_grid2d.Count; i++)
+        {
+            string row = string.Join(", ", broken_grid2d[i]);
+            Debug.Log($"Row {i}: {row}");
+        }
+
+        //PositionBlocks(levelData, broken_grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, moveCountText, rocket, goal_box, goal_stone, goal_vase, broken_block, cube_particles, obstacle_particles, rocket_particles);
+        
+        
+        //System.Threading.Thread.Sleep(500); // that stop all the game, rendring included
+        /*
+        int whatIsOneSec = 1000000000;
+        while(whatIsOneSec-- != 0){
+            // pass;
+        }
+        */
+        
+        //PositionBlocks(levelData, grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, moveCountText, rocket, goal_box, goal_stone, goal_vase, broken_block, cube_particles, obstacle_particles, rocket_particles);
+        //bool any_obstacle = ArrangeGoals(grid2d, goal_box, goal_stone, goal_vase);
+        //IsGameFinish(any_obstacle, moveCountText.text);
+
+        //GameInitalizer gameInit = FindObjectOfType<GameInitalizer>();
+        /*
         if (gameInit != null)
         {
             gameInit.BlockHandler(levelData, grid2d);
@@ -590,5 +690,58 @@ public class GameGridHandler : MonoBehaviour
         {
             Debug.LogError("GameInitalizer component not found in the scene!");
         }
+        */
+
+        GameInitalizer gameInit = FindObjectOfType<GameInitalizer>();
+        
+
+
+        if(gameInit == null) Debug.LogError("gameInit is null! IMPORRRTANTTT");
+        else Debug.LogError("gameInit is not null!");
+        if (broken_grid2d == null) Debug.LogError("broken_grid2d is null!");
+        else Debug.LogError("broken_grid2d is not null!");
+        if (grid2d == null) Debug.LogError("grid2d is null!");
+        else Debug.LogError("grid2d is not null!");
+        if (levelData == null) Debug.LogError("levelData is null!");
+        else Debug.LogError("levelData is not null!");
+
+
+
+        if (gameInit != null && broken_grid2d != null && grid2d != null && levelData != null)
+        {
+            Debug.Log("Starting HandleGridUpdates coroutine...");
+            StartCoroutine(HandleGridUpdates(levelData, grid2d, broken_grid2d, gameInit));
+
+            //gameInit.BlockHandler(levelData, broken_grid2d);
+            //gameInit.BlockHandler(levelData, grid2d);
+            
+
+        }
+        else
+        {
+            Debug.LogError("GameInitalizer component not found in the scene!");
+        }
+
+        bool any_obstacle = ArrangeGoals(grid2d, goal_box, goal_stone, goal_vase);
+        IsGameFinish(any_obstacle, moveCountText.text);
     }
+
+    IEnumerator HandleGridUpdates(LevelData levelData, List<List<string>> grid2d, List<List<string>> broken_grid2d, GameInitalizer gameInit)
+    {
+        if (gameInit != null && broken_grid2d != null && grid2d != null && levelData != null)
+        {
+            Debug.Log("Starting HandleGridUpdates coroutine...");
+
+            // Apply first changes
+            gameInit.BlockHandler(levelData, broken_grid2d);
+            
+            // Renderr
+            yield return null;
+            yield return new WaitForSeconds(0.4f);
+
+            gameInit.BlockHandler(levelData, grid2d); 
+        }
+    }
+
+
 }

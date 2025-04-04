@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using TMPro;
 using System.Collections;
+using System.Linq;
 
 public class GameInitalizer : MonoBehaviour
 {
@@ -27,7 +28,7 @@ public class GameInitalizer : MonoBehaviour
     public Canvas goal_stone;
     public Canvas goal_vase;
 
-    private List<List<string>> grid2d= new List<List<string>>();
+    private List<List<string>> grid2d = new List<List<string>>();
 
     public RectTransform broken_block;
 
@@ -75,11 +76,22 @@ public class GameInitalizer : MonoBehaviour
 
         SetGoalsInitial(goals, grid2d);
 
-        BlockHandler(levelData, grid2d);
+        HashSet<(int, int)> sliding_blocks = new HashSet<(int, int)>();
+        List<int> sliding_cols = Enumerable.Repeat(0, grid2d.Count).ToList();
+        /*
+        for(int i = 0; i < grid2d.Count; i++){
+            for(int j = 0; j < grid2d[0].Count; j++){
+                sliding_blocks.Add((i, j));       
+                sliding_cols[j] += 1;
+                
+            }
+        }
+        */
+        BlockHandler(levelData, grid2d, sliding_blocks, sliding_cols);
         //BlcokHandler(levelData, grid2d);
     }
 
-    public void BlockHandler(LevelData levelData, List<List<string>> grid2d)
+    public void BlockHandler(LevelData levelData, List<List<string>> grid2d, HashSet<(int, int)> sliding_blocks, List<int> sliding_cols)
     {
         //GameGridHandler gameGridHandler = new GameGridHandler();
         GameGridHandler gameGridHandler = FindObjectOfType<GameGridHandler>();
@@ -101,7 +113,11 @@ public class GameInitalizer : MonoBehaviour
             Destroy(tempParent); // Destroy the entire tempParent GameObject
             tempParent = null;   
         }
-        gameGridHandler.PositionBlocks(levelData, grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, moveCountText, rocket, goal_box, goal_stone, goal_vase, broken_block, cube_particles, obstacle_particles, rocket_particles);
+        gameGridHandler.PositionBlocks(
+            levelData, grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, moveCountText, 
+            rocket, goal_box, goal_stone, goal_vase, broken_block, cube_particles, obstacle_particles, rocket_particles,
+            sliding_blocks, sliding_cols
+        );
     }
 
     void SetGoalsInitial(List<int> goals, List<List<string>> grid2d){

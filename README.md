@@ -1,6 +1,5 @@
 # Blast Game 🟩 🟦 🟥 🟨 🚀
 This is a simple puzzle game where players blast adjacent same-colored blocks to clear obstacles within a limited number of moves.
-
 ## Game Flow
 1) Start with Level 1.
 2) When the "Level 1" button is clicked, the game screen opens. Player can:
@@ -12,7 +11,8 @@ This is a simple puzzle game where players blast adjacent same-colored blocks to
 3) If the player destroys all obstacles before the move count reaches zero, they win, and a victory screen appears. If the move count reaches zero while obstacles are still present, a defeat screen appears.
 4) If a level is passed successfully, the next level becomes playable.
 5) If all levels are finished, game restarts from "Level 1" (mod10).
-  
+
+Whole gameplay: <a href="https://www.youtube.com/shorts/N7tZ5WY1sQk">video</a><br>
 Example screenshots given below respectively: <br>
 <img height="250" alt="main1" src="https://github.com/user-attachments/assets/73124a95-332a-404d-a309-ee3e15d260a7" />
 <img height="250" alt="game1" src="https://github.com/user-attachments/assets/516b8980-828c-4ca6-b9d1-01d2b5df7817" />

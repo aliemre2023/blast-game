@@ -55,7 +55,7 @@ public class GameGridHandler : MonoBehaviour
         else return true;
     }
 
-    void DearrangeRocketBlock(List<List<string>> grid2d){
+    void DearrangeRocketBlocks(List<List<string>> grid2d){
         int rows = grid2d.Count;
         int cols = grid2d[0].Count;
 
@@ -153,8 +153,6 @@ public class GameGridHandler : MonoBehaviour
         Canvas goal_box, Canvas goal_stone, Canvas goal_vase, RectTransform broken_block,
         List<RectTransform> cube_particles, List<RectTransform> obstacle_particles, List<RectTransform> rocket_particles)
     {
-        DearrangeRocketBlock(grid2d);
-        ArrangeRocketBlocks(grid2d);
         
         
         if (cubes.Count != 4 || obstacles.Count != 4 || levelData == null || grid2d == null || grid2d.Count == 0 || grid2d[0].Count == 0)
@@ -189,6 +187,24 @@ public class GameGridHandler : MonoBehaviour
         float minY = grid.rect.yMin;
         float maxY = grid.rect.yMax;
 
+        bool broken_grid = false;
+
+        for(int i = 0; i < levelData.grid_height; i++){
+            for(int j = 0; j < levelData.grid_width; j++){
+                if (grid2d[i][j].ToString() == "rand"){
+                    int random_cube_idx = Random.Range(0, cubes.Count);
+                    if(random_cube_idx == 0) grid2d[i][j] = "b";
+                    else if(random_cube_idx == 1) grid2d[i][j] = "g";
+                    else if(random_cube_idx == 2) grid2d[i][j] = "r";
+                    else if(random_cube_idx == 3) grid2d[i][j] = "y";
+                }
+                if(grid2d[i][j].ToString().Contains("_broken")) broken_grid = true;
+            }
+        }
+        
+        DearrangeRocketBlocks(grid2d);
+        ArrangeRocketBlocks(grid2d);
+        
         for(int i = 0; i < levelData.grid_height; i++)
         {
             for(int j = 0; j < levelData.grid_width; j++)
@@ -219,10 +235,10 @@ public class GameGridHandler : MonoBehaviour
                     else if (grid2d[i][j].ToString() == "s_broken") particle = obstacle_particles[1];
                     else if (grid2d[i][j].ToString() == "v2_broken") particle = obstacle_particles[2];
                     else if (grid2d[i][j].ToString() == "rocket_v_broken" || grid2d[i][j].ToString() == "rocket_h_broken") particle = rocket_particles[0];
-                    else if (grid2d[i][j].ToString() == "b_broken" ||grid2d[i][j].ToString() == "b_rocket_broken") particle = cube_particles[0];
-                    else if (grid2d[i][j].ToString() == "g_broken" ||grid2d[i][j].ToString() == "g_rocket_broken") particle = cube_particles[1];
-                    else if (grid2d[i][j].ToString() == "r_broken" ||grid2d[i][j].ToString() == "r_rocket_broken") particle = cube_particles[2];
-                    else if (grid2d[i][j].ToString() == "y_broken" ||grid2d[i][j].ToString() == "y_rocket_broken") particle = cube_particles[3];
+                    else if (grid2d[i][j].ToString() == "b_broken" || grid2d[i][j].ToString() == "b_rocket_broken") particle = cube_particles[0];
+                    else if (grid2d[i][j].ToString() == "g_broken" || grid2d[i][j].ToString() == "g_rocket_broken") particle = cube_particles[1];
+                    else if (grid2d[i][j].ToString() == "r_broken" || grid2d[i][j].ToString() == "r_rocket_broken") particle = cube_particles[2];
+                    else if (grid2d[i][j].ToString() == "y_broken" || grid2d[i][j].ToString() == "y_rocket_broken") particle = cube_particles[3];
                     else particle = cube_particles[0];
 
                     /*
@@ -283,7 +299,7 @@ public class GameGridHandler : MonoBehaviour
 
                     // listener
                     Button instantiatedButton = copy_block.GetComponent<Button>();
-                    if (instantiatedButton != null)
+                    if (instantiatedButton != null && !broken_grid)
                     {
                         instantiatedButton.onClick.AddListener(() => OnButtonClicked(
                             copy_block.name, levelData, grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, 
@@ -426,7 +442,7 @@ public class GameGridHandler : MonoBehaviour
                                     grid2d[t][y+1] = "v2";
                                 }
                                 else{
-                                    broken_grid2d[t][y+1] = grid2d[t][y+1] + "_broken";
+                                    if(!broken_grid2d[t][y+1].EndsWith("_broken")) broken_grid2d[t][y+1] = grid2d[t][y+1] + "_broken";
                                     grid2d[t][y+1] = "rand";
                                 }
                             }
@@ -436,7 +452,7 @@ public class GameGridHandler : MonoBehaviour
                                 grid2d[t][y] = "v2";
                             }
                             else{
-                                broken_grid2d[t][y] = grid2d[t][y] + "_broken";
+                                if(!broken_grid2d[t][y].EndsWith("_broken")) broken_grid2d[t][y] = grid2d[t][y] + "_broken";
                                 grid2d[t][y] = "rand";
                             }
                         }
@@ -446,7 +462,7 @@ public class GameGridHandler : MonoBehaviour
                                     grid2d[t][y-1] = "v2";
                                 }
                                 else{
-                                    broken_grid2d[t][y-1] = grid2d[t][y-1] + "_broken";
+                                    if(!broken_grid2d[t][y-1].EndsWith("_broken")) broken_grid2d[t][y-1] = grid2d[t][y-1] + "_broken";
                                     grid2d[t][y-1] = "rand";
                                 }
                             }
@@ -710,7 +726,7 @@ public class GameGridHandler : MonoBehaviour
         if (gameInit != null && broken_grid2d != null && grid2d != null && levelData != null)
         {
             Debug.Log("Starting HandleGridUpdates coroutine...");
-            StartCoroutine(HandleGridUpdates(levelData, grid2d, broken_grid2d, gameInit));
+            StartCoroutine(HandleGridUpdates(levelData, grid2d, broken_grid2d, gameInit, goal_box, goal_stone, goal_vase, moveCountText));
 
             //gameInit.BlockHandler(levelData, broken_grid2d);
             //gameInit.BlockHandler(levelData, grid2d);
@@ -721,12 +737,11 @@ public class GameGridHandler : MonoBehaviour
         {
             Debug.LogError("GameInitalizer component not found in the scene!");
         }
-
-        bool any_obstacle = ArrangeGoals(grid2d, goal_box, goal_stone, goal_vase);
-        IsGameFinish(any_obstacle, moveCountText.text);
     }
 
-    IEnumerator HandleGridUpdates(LevelData levelData, List<List<string>> grid2d, List<List<string>> broken_grid2d, GameInitalizer gameInit)
+    IEnumerator HandleGridUpdates(LevelData levelData, List<List<string>> grid2d, List<List<string>> broken_grid2d, GameInitalizer gameInit,
+        Canvas goal_box, Canvas goal_stone, Canvas goal_vase, TextMeshProUGUI moveCountText
+    )
     {
         if (gameInit != null && broken_grid2d != null && grid2d != null && levelData != null)
         {
@@ -738,6 +753,9 @@ public class GameGridHandler : MonoBehaviour
             // Renderr
             yield return null;
             yield return new WaitForSeconds(0.4f);
+
+            bool any_obstacle = ArrangeGoals(grid2d, goal_box, goal_stone, goal_vase);
+            IsGameFinish(any_obstacle, moveCountText.text);
 
             gameInit.BlockHandler(levelData, grid2d); 
         }

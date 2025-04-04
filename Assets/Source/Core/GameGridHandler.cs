@@ -8,26 +8,29 @@ using System.Collections;
 public class GameGridHandler : MonoBehaviour
 {
 
-    void IsGameFinish(bool any_obstacle, string any_move)
+    bool IsGameFinish(bool any_obstacle, string any_move)
     {
         GameFinishHandler gameFinishHandler = FindObjectOfType<GameFinishHandler>();
 
         if (gameFinishHandler == null)
         {
             Debug.LogError("GameFinishHandler is not assigned!");
-            return;
+            return false;
         }
 
         if (!any_obstacle)
         {
             // Win screen
             gameFinishHandler.ShowWinPopup();
+            return true;
         }
         else if (any_move == "0")
         {
             // Lose screen
             gameFinishHandler.ShowLosePopup();
+            return true;
         }
+        return false;
     }
 
     bool ArrangeGoals(List<List<string>> grid2d, Canvas goal_box, Canvas goal_stone, Canvas goal_vase){
@@ -151,7 +154,9 @@ public class GameGridHandler : MonoBehaviour
         List<RectTransform> obstacles, GameObject tempParent, List<int> goals, 
         TextMeshProUGUI moveCountText, List<RectTransform> rocket,
         Canvas goal_box, Canvas goal_stone, Canvas goal_vase, RectTransform broken_block,
-        List<RectTransform> cube_particles, List<RectTransform> obstacle_particles, List<RectTransform> rocket_particles)
+        List<RectTransform> cube_particles, List<RectTransform> obstacle_particles, List<RectTransform> rocket_particles,
+        HashSet<(int, int)> sliding_blocks, List<int> sliding_cols
+    )
     {
         
         
@@ -201,6 +206,13 @@ public class GameGridHandler : MonoBehaviour
                 if(grid2d[i][j].ToString().Contains("_broken")) broken_grid = true;
             }
         }
+        
+        if(broken_grid){
+            sliding_blocks = new HashSet<(int, int)>();;
+            sliding_cols = Enumerable.Repeat(0, grid2d.Count).ToList();
+        }
+        
+    
         
         DearrangeRocketBlocks(grid2d);
         ArrangeRocketBlocks(grid2d);
@@ -295,6 +307,18 @@ public class GameGridHandler : MonoBehaviour
                 {
                     RectTransform copy_block = Instantiate(block, tempParent.transform);
                     copy_block.anchoredPosition = new Vector2(minX + x, minY + y);
+                    
+                    if(sliding_blocks != null && sliding_cols != null && sliding_blocks.Contains((i, j)))
+                    {
+                        Vector2 startPosition = new Vector2(minX + x, minY + y + sliding_cols[j]*20);
+                        Vector2 endPosition = new Vector2(minX + x, minY + y);
+                        StartCoroutine(SmoothSlide(copy_block, startPosition, endPosition, sliding_cols[j]*0.2f));
+                    }
+                    else
+                    {
+                        copy_block.anchoredPosition = new Vector2(minX + x, minY + y);
+                    }
+                    
                     copy_block.name = $"{i},{j}";
 
                     // listener
@@ -317,6 +341,22 @@ public class GameGridHandler : MonoBehaviour
         }
     }
     
+    private IEnumerator SmoothSlide(RectTransform block, Vector2 startPosition, Vector2 endPosition, float duration)
+    {
+        float elapsedTime = 0f;
+
+        while (elapsedTime < duration)
+        {
+            block.anchoredPosition = Vector2.Lerp(startPosition, endPosition, elapsedTime / duration);
+            elapsedTime += Time.deltaTime;
+
+            yield return null;
+        }
+
+        block.anchoredPosition = endPosition;
+    }
+    
+
     void OnButtonClicked(string buttonName, LevelData levelData, List<List<string>> grid2d, RectTransform grid, 
         List<RectTransform> cubes, List<RectTransform> cube_rocket_state, 
         List<RectTransform> obstacles, GameObject tempParent, List<int> goals, 
@@ -669,43 +709,31 @@ public class GameGridHandler : MonoBehaviour
                 grid2d[rows-1][_y] = "rand";
             }
 
-            
-
         }
 
+        HashSet<(int, int)> sliding_blocks = new HashSet<(int, int)>();
+        List<int> sliding_cols = Enumerable.Repeat(0, broken_grid2d[0].Count).ToList();
+        
+        for(int i = 0; i < broken_grid2d.Count; i++){
+            for(int j = 0; j < broken_grid2d[0].Count; j++){
+                // sliding_cols.Count > j && 
+                if(broken_grid2d[i][j].EndsWith("_broken")){
+                    for(int k = i; k < broken_grid2d.Count; k++){
+                        sliding_blocks.Add((k, j));
+                    }
+                    sliding_cols[j] += 1;
+                }
+            }
+        }
+        
+        
 
+        /*
         Debug.Log("Printing broken_grid2d:");
         for (int i = 0; i < broken_grid2d.Count; i++)
         {
             string row = string.Join(", ", broken_grid2d[i]);
             Debug.Log($"Row {i}: {row}");
-        }
-
-        //PositionBlocks(levelData, broken_grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, moveCountText, rocket, goal_box, goal_stone, goal_vase, broken_block, cube_particles, obstacle_particles, rocket_particles);
-        
-        
-        //System.Threading.Thread.Sleep(500); // that stop all the game, rendring included
-        /*
-        int whatIsOneSec = 1000000000;
-        while(whatIsOneSec-- != 0){
-            // pass;
-        }
-        */
-        
-        //PositionBlocks(levelData, grid2d, grid, cubes, cube_rocket_state, obstacles, tempParent, goals, moveCountText, rocket, goal_box, goal_stone, goal_vase, broken_block, cube_particles, obstacle_particles, rocket_particles);
-        //bool any_obstacle = ArrangeGoals(grid2d, goal_box, goal_stone, goal_vase);
-        //IsGameFinish(any_obstacle, moveCountText.text);
-
-        //GameInitalizer gameInit = FindObjectOfType<GameInitalizer>();
-        /*
-        if (gameInit != null)
-        {
-            gameInit.BlockHandler(levelData, grid2d);
-        }
-        else
-        {
-            Debug.LogError("GameInitalizer component not found in the scene!");
-        }
         */
 
         GameInitalizer gameInit = FindObjectOfType<GameInitalizer>();
@@ -726,7 +754,7 @@ public class GameGridHandler : MonoBehaviour
         if (gameInit != null && broken_grid2d != null && grid2d != null && levelData != null)
         {
             Debug.Log("Starting HandleGridUpdates coroutine...");
-            StartCoroutine(HandleGridUpdates(levelData, grid2d, broken_grid2d, gameInit, goal_box, goal_stone, goal_vase, moveCountText));
+            StartCoroutine(HandleGridUpdates(levelData, grid2d, broken_grid2d, gameInit, goal_box, goal_stone, goal_vase, moveCountText, sliding_blocks, sliding_cols));
 
             //gameInit.BlockHandler(levelData, broken_grid2d);
             //gameInit.BlockHandler(levelData, grid2d);
@@ -740,7 +768,8 @@ public class GameGridHandler : MonoBehaviour
     }
 
     IEnumerator HandleGridUpdates(LevelData levelData, List<List<string>> grid2d, List<List<string>> broken_grid2d, GameInitalizer gameInit,
-        Canvas goal_box, Canvas goal_stone, Canvas goal_vase, TextMeshProUGUI moveCountText
+        Canvas goal_box, Canvas goal_stone, Canvas goal_vase, TextMeshProUGUI moveCountText,
+        HashSet<(int, int)> sliding_blocks, List<int> sliding_cols
     )
     {
         if (gameInit != null && broken_grid2d != null && grid2d != null && levelData != null)
@@ -748,16 +777,23 @@ public class GameGridHandler : MonoBehaviour
             Debug.Log("Starting HandleGridUpdates coroutine...");
 
             // Apply first changes
-            gameInit.BlockHandler(levelData, broken_grid2d);
+            gameInit.BlockHandler(levelData, broken_grid2d, sliding_blocks, sliding_cols);
             
             // Renderr
             yield return null;
             yield return new WaitForSeconds(0.4f);
 
             bool any_obstacle = ArrangeGoals(grid2d, goal_box, goal_stone, goal_vase);
-            IsGameFinish(any_obstacle, moveCountText.text);
+            bool isFinish = IsGameFinish(any_obstacle, moveCountText.text);
 
-            gameInit.BlockHandler(levelData, grid2d); 
+            if(!isFinish) gameInit.BlockHandler(levelData, grid2d, sliding_blocks, sliding_cols); 
+            /*
+            if(isFinish){
+                //grid2d = new List<List<string>>();
+                StopAllCoroutines();
+                yield break;
+            }
+            */
         }
     }
 

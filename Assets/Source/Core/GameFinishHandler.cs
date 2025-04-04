@@ -44,7 +44,7 @@ public class GameFinishHandler : MonoBehaviour
         message.gameObject.SetActive(true);
 
         // Wait for 3 seconds
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(2);
 
         // Hide the popup and message
         popup.gameObject.SetActive(false);

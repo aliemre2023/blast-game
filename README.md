@@ -18,7 +18,7 @@ Example screenshots given below respectively: <br>
 <img height="250" alt="game1" src="https://github.com/user-attachments/assets/516b8980-828c-4ca6-b9d1-01d2b5df7817" />
 <img height="250" alt="blast1" src="https://github.com/user-attachments/assets/5dea6ca5-c712-495b-8f21-b817ef8f347e" />
 <img height="250" alt="blast2" src="https://github.com/user-attachments/assets/ccc891fb-5af3-4c61-a8fa-90b7cf9db6b4" />
-<img height="250" alt="blast3" src="https://github.com/user-attachments/assets/4171cabe-244c-413b-a058-bb49ad545921" />
+<img height="250" alt="blast3" src="https://github.com/user-attachments/assets/691f0c10-80a6-4f0e-96ec-f8a87d964c89" />
 <img height="250" alt="gameyes" src="https://github.com/user-attachments/assets/1cb76890-397d-448d-9e10-48959c519a3e" />
 <img height="250" alt="gameno" src="https://github.com/user-attachments/assets/f50bd252-da81-417e-93ba-39f5526a33cb" />
 <img height="250" alt="main2" src="https://github.com/user-attachments/assets/d0b9f8c1-2485-45d4-ae33-953957708e52" />
